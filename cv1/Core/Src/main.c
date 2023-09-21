@@ -90,9 +90,9 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  void morse(const char* c, int size)
+  void morse_LD(const char* c)
   {
-	  for (int i = 0; i < size; i++)
+	  for (int i = 0; c[i] != '\n' ; i++)
 	  {
 		  if (c[i] == '.')  {
 			  LL_GPIO_SetOutputPin(LD2_GPIO_Port, LD2_Pin);
@@ -112,7 +112,7 @@ int main(void)
 	  LL_mDelay(100);
   }
 
-  char* morse_translate(char c)
+  char* char2morse(char c)
   {
 	  switch(c)
 	  {
@@ -140,39 +140,49 @@ int main(void)
 	  case 'k':
 		  return "-.-\n";
 	  case 'l':
-		  return "";
+		  return ".-..\n";
 	  case 'm':
-		  return ".-";
+		  return "--\n";
 	  case 'n':
-		  return ".-";
+		  return "-.\n";
 	  case 'o':
-		  return ".-";
+		  return "---\n";
 	  case 'p':
-		  return ".-";
+		  return ".--.\n";
 	  case 'q':
-		  return ".-";
+		  return "--.-\n";
 	  case 'r':
-		  return ".-";
+		  return ".-.\n";
 	  case 's':
-		  return ".-";
+		  return "...\n";
 	  case 't':
-		  return ".-";
+		  return "-\n";
 	  case 'u':
-		  return ".-";
+		  return "..-\n";
 	  case 'v':
-		  return ".-";
+		  return "...-\n";
 	  case 'w':
-		  return ".-";
+		  return ".--\n";
 	  case 'x':
-		  return ".-";
+		  return "-..-\n";
 	  case 'y':
-		  return ".-";
+		  return "-.--\n";
 	  case 'z':
-		  return ".-";
-	  default;
+		  return "--..\n";
+	  default:
 	  	  return 0;
 	  }
   }
+
+void morse_translate (const char* txt)
+{
+	for (int i = 0; txt[i] != '\n'; i++)
+	{
+		char* mor = 0;
+		mor = char2morse(txt[i]);
+		morse_LD(mor);
+	}
+}
 
 
   /* USER CODE END 2 */
@@ -181,12 +191,28 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  morse("...", 3);
-	  morse("---", 3);
-	  morse("...", 3);
+	  uint8_t seq = 0b111000111;
 
-	  LL_GPIO_ResetOutputPin(LD2_GPIO_Port, LD2_Pin);
-	  LL_mDelay(600);
+	  while (seq != 0)
+	  {
+		  if (seq % 2 == 0)
+		  {
+			  morse_LD("-\n");
+		  }
+		  else
+		  {
+			  morse_LD(".\n");
+		  }
+
+		  seq = seq >> 1;
+
+	  }
+
+	  //char txt[] = "sos\n";
+
+	  //morse_translate(txt);
+
+
     /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */
   }
