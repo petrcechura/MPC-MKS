@@ -31,7 +31,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define BUTTON_SAMPLE 40
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -55,29 +55,76 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void blikatko()
+void blikac()
 {
+	static uint32_t counter = 0;
+	const uint32_t LED_TIME = 300;
 
-	static enum {LED_ON, LED_OFF} state;
-	static uint32_t counter = 100;
-	const uint32_t SECONDS_ON = 300;
-	const uint32_t SECONDS_OFF = 200;
-
-
-	if (state == LED_ON)  {
-		if (Tick > counter + SECONDS_ON)  {
-			LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+	// LED1 periodic
+	if (Tick > counter + LED_TIME)  {
+		LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
 			counter = Tick;
-			state = LED_OFF;
 		}
-	}	else {
-		if (Tick > counter + SECONDS_OFF) {
-			LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-			counter = Tick;
-			state = LED_ON;
+}
+void tlacitka()
+{
+	static uint16_t sample_delay;
+
+	// sample button click every <BUTTOM SAMPLE> milliseconds
+	if (Tick <= sample_delay + BUTTON_SAMPLE)  {
+		return;
+	}
+	sample_delay = Tick;
+
+	// states
+	static uint8_t old_state_S1;
+	static uint8_t old_state_S2;
+	uint8_t new_state_S2 = LL_GPIO_IsInputPinSet(S2_GPIO_Port, S2_Pin);
+	uint8_t new_state_S1 = LL_GPIO_IsInputPinSet(S1_GPIO_Port, S1_Pin);
+
+	// LED2 VARIABLES
+	static enum {LED2_OFF, LED2_ON} LED2_STATE;
+	static enum {LED1_OFF, LED1_ON} LED1_STATE;
+	static uint16_t LED_TIME_LONG = 1500;
+	static uint16_t LED_TIME_SHORT = 500;
+	static uint16_t counter_S1 = 0;
+	static uint16_t counter_S2 = 0;
+
+	// falling edge S1
+	if (old_state_S1 && !new_state_S1)  {
+		if (LED2_STATE == LED2_OFF)  {
+			LED2_STATE = LED2_ON;
+			counter_S1 = Tick;
+			LL_GPIO_SetOutputPin(LED2_GPIO_Port, LED2_Pin);
 		}
 	}
+
+	// falling edge S2
+	if (old_state_S2 && !new_state_S2)  {
+		if (LED1_STATE == LED1_OFF)  {
+			LED1_STATE = LED1_ON;
+			counter_S2 = Tick;
+			LL_GPIO_SetOutputPin(LED1_GPIO_Port, LED1_Pin);
+		}
+	}
+
+	// after given time, set LED2 off
+	if (Tick > counter_S1 + LED_TIME_SHORT) {
+		LL_GPIO_ResetOutputPin(LED2_GPIO_Port, LED2_Pin);
+		LED2_STATE = LED2_OFF;
+	}
+
+	// after given time, set LED1 off
+	if (Tick > counter_S2 + LED_TIME_LONG) {
+		LL_GPIO_ResetOutputPin(LED1_GPIO_Port, LED1_Pin);
+		LED1_STATE = LED1_OFF;
+	}
+
+
+	old_state_S1 = new_state_S1;
+	old_state_S2 = new_state_S2;
 }
+
 /* USER CODE END 0 */
 
 /**
@@ -119,7 +166,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  blikatko();
+	  //blikac();
+	  tlacitka();
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -255,19 +303,10 @@ static void MX_GPIO_Init(void)
   LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTC, LL_SYSCFG_EXTI_LINE13);
 
   /**/
-  LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTC, LL_SYSCFG_EXTI_LINE0);
-
-  /**/
   LL_GPIO_SetPinPull(B1_GPIO_Port, B1_Pin, LL_GPIO_PULL_NO);
 
   /**/
-  LL_GPIO_SetPinPull(S2_GPIO_Port, S2_Pin, LL_GPIO_PULL_UP);
-
-  /**/
   LL_GPIO_SetPinMode(B1_GPIO_Port, B1_Pin, LL_GPIO_MODE_INPUT);
-
-  /**/
-  LL_GPIO_SetPinMode(S2_GPIO_Port, S2_Pin, LL_GPIO_MODE_INPUT);
 
   /**/
   EXTI_InitStruct.Line_0_31 = LL_EXTI_LINE_13;
@@ -277,11 +316,10 @@ static void MX_GPIO_Init(void)
   LL_EXTI_Init(&EXTI_InitStruct);
 
   /**/
-  EXTI_InitStruct.Line_0_31 = LL_EXTI_LINE_0;
-  EXTI_InitStruct.LineCommand = ENABLE;
-  EXTI_InitStruct.Mode = LL_EXTI_MODE_IT;
-  EXTI_InitStruct.Trigger = LL_EXTI_TRIGGER_RISING;
-  LL_EXTI_Init(&EXTI_InitStruct);
+  GPIO_InitStruct.Pin = S2_Pin;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
+  LL_GPIO_Init(S2_GPIO_Port, &GPIO_InitStruct);
 
   /**/
   GPIO_InitStruct.Pin = S1_Pin;
@@ -312,10 +350,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
   GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
   LL_GPIO_Init(LED2_GPIO_Port, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  NVIC_SetPriority(EXTI0_1_IRQn, 0);
-  NVIC_EnableIRQ(EXTI0_1_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
