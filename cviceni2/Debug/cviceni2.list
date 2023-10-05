@@ -1135,7 +1135,7 @@ void tlacitka()
 	}
 
 	// after given time, set LED2 off
-	if (Tick > counter_S1 + LED_TIME_SHORT) {
+	if (Tick > counter_S1 + LED_TIME_SHORT)  {
  80006d0:	4b31      	ldr	r3, [pc, #196]	; (8000798 <tlacitka+0xf8>)
  80006d2:	881b      	ldrh	r3, [r3, #0]
  80006d4:	001a      	movs	r2, r3

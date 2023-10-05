@@ -103,42 +103,41 @@ void tlacitka()
 	}
 
 	// after given time, set LED2 off
-	if (Tick > counter_S1 + LED_TIME_SHORT) {
+	if (Tick > counter_S1 + LED_TIME_SHORT)  {
 		LL_GPIO_ResetOutputPin(LED2_GPIO_Port, LED2_Pin);
 		LED2_STATE = LED2_OFF;
 	}
 
 	// sample button S2 click every <BUTTOM SAMPLE> milliseconds
-	if (Tick <= sample_delay + BUTTON_SAMPLE)  {
-		return;
-	}
-	sample_delay = Tick;
+	if (Tick > sample_delay + BUTTON_SAMPLE)  {
+		sample_delay = Tick;
 
-	// states
-	static uint8_t old_state_S2;
-	uint8_t new_state_S2 = LL_GPIO_IsInputPinSet(S2_GPIO_Port, S2_Pin);
+		// states
+		static uint8_t old_state_S2;
+		uint8_t new_state_S2 = LL_GPIO_IsInputPinSet(S2_GPIO_Port, S2_Pin);
 
-	// LED2 VARIABLES
-	static enum {LED1_OFF, LED1_ON} LED1_STATE;
-	static uint16_t LED_TIME_LONG = 1500;
-	static uint16_t counter_S2 = 0;
+		// LED2 VARIABLES
+		static enum {LED1_OFF, LED1_ON} LED1_STATE;
+		static uint16_t LED_TIME_LONG = 1500;
+		static uint16_t counter_S2 = 0;
 
-	// falling edge S2
-	if (old_state_S2 && !new_state_S2)  {
-		if (LED1_STATE == LED1_OFF)  {
-			LED1_STATE = LED1_ON;
-			counter_S2 = Tick;
-			LL_GPIO_SetOutputPin(LED1_GPIO_Port, LED1_Pin);
+		// falling edge S2
+		if (old_state_S2 && !new_state_S2)  {
+			if (LED1_STATE == LED1_OFF)  {
+				LED1_STATE = LED1_ON;
+				counter_S2 = Tick;
+				LL_GPIO_SetOutputPin(LED1_GPIO_Port, LED1_Pin);
+			}
 		}
-	}
 
-	// after given time, set LED1 off
-	if (Tick > counter_S2 + LED_TIME_LONG) {
-		LL_GPIO_ResetOutputPin(LED1_GPIO_Port, LED1_Pin);
-		LED1_STATE = LED1_OFF;
-	}
+		// after given time, set LED1 off
+		if (Tick > counter_S2 + LED_TIME_LONG) {
+			LL_GPIO_ResetOutputPin(LED1_GPIO_Port, LED1_Pin);
+			LED1_STATE = LED1_OFF;
+		}
 
-	old_state_S2 = new_state_S2;
+		old_state_S2 = new_state_S2;
+	}
 }
 
 /* USER CODE END 0 */
