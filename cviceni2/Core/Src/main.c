@@ -42,7 +42,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+volatile uint32_t Tick;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -55,7 +55,29 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void blikatko()
+{
 
+	static enum {LED_ON, LED_OFF} state;
+	static uint32_t counter = 100;
+	const uint32_t SECONDS_ON = 300;
+	const uint32_t SECONDS_OFF = 200;
+
+
+	if (state == LED_ON)  {
+		if (Tick > counter + SECONDS_ON)  {
+			LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+			counter = Tick;
+			state = LED_OFF;
+		}
+	}	else {
+		if (Tick > counter + SECONDS_OFF) {
+			LL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+			counter = Tick;
+			state = LED_ON;
+		}
+	}
+}
 /* USER CODE END 0 */
 
 /**
@@ -89,7 +111,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  LL_SYSTICK_EnableIT();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -97,7 +119,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+	  blikatko();
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
