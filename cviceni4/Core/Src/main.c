@@ -113,7 +113,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  sct_value(bit2value(raw_pot));
+	  sct_value(bit2value(raw_pot), (raw_pot * 9) / 4096);
 	  HAL_ADC_ConvCpltCallback(&hadc);
 	  HAL_Delay(500);
   }
