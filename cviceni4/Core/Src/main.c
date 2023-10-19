@@ -31,7 +31,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define ADC_Q 6
+#define ADC_Q 12
 #define DELAY 1000
 /* Temperature sensor calibration value address */
 #define TEMP110_CAL_ADDR ((uint16_t*) ((uint32_t) 0x1FFFF7C2))
@@ -86,10 +86,10 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 			avg_pot -= raw_pot;
 			avg_pot += HAL_ADC_GetValue(hadc);
 			break;
-		case 1:
+		case 2:
 			raw_volt = HAL_ADC_GetValue(hadc);
 			break;
-		case 2:
+		case 1:
 			raw_temp = HAL_ADC_GetValue(hadc);
 			break;
 		}
@@ -98,14 +98,14 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 	else channel++;
 }
 
-uint32_t bit2value(uint32_t bit_value)
+static uint32_t bit2value(uint32_t bit_value)
 {
 	return (bit_value * (500+1)/4096);
 }
 
 static enum { SHOW_POT, SHOW_VOLT, SHOW_TEMP } state = SHOW_POT;
 
-void check_state()
+static void check_state()
 {
 	if (state != SHOW_POT)  {
 		if (HAL_GetTick() > counter + DELAY)  {
@@ -114,7 +114,7 @@ void check_state()
 	}
 }
 
-void check_buttons()
+static void check_buttons()
 {
 	if (!HAL_GPIO_ReadPin(S1_GPIO_Port, S1_Pin))  {
 		state = SHOW_VOLT;
@@ -185,15 +185,17 @@ int main(void)
 	  		  sct_value(bit2value(raw_pot), (raw_pot * 9) / 4096);
 		  break;
 	  	  case SHOW_TEMP:
-	  		  sct_value(bit2value(temperature), (temperature * 9) / 4096);
+	  		  sct_value((temperature), (temperature * 9) / 4096);
 	  	  break;
 	  	  case SHOW_VOLT:
-	  		  sct_value(bit2value(voltage), (voltage* 9) / 4096);
+	  		  sct_value((voltage), (voltage* 9) / 4096);
 	  	  break;
 	  }
 
 	  check_buttons();
 	  check_state();
+
+	  HAL_Delay(50);
   }
   /* USER CODE END 3 */
 }
