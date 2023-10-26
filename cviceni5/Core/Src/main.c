@@ -18,13 +18,12 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <stdio.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#define RX_BUFFER_LEN 64
-#define uart_rx_write_ptr (RX_BUFFER_LEN - hdma_usart2_rx.Instance->CNDTR)
-#define CMD_BUFFER_LEN 256
+#include <stdio.h>
+#include <string.h>
+#include <strings.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,7 +33,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define RX_BUFFER_LEN 64
+#define uart_rx_write_ptr (RX_BUFFER_LEN - hdma_usart2_rx.Instance->CNDTR)
+#define CMD_BUFFER_LEN 256
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -45,6 +46,7 @@
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
 DMA_HandleTypeDef hdma_usart2_rx;
+
 /* USER CODE BEGIN PV */
 static uint8_t uart_rx_buf[RX_BUFFER_LEN];
 static volatile uint16_t uart_rx_read_ptr = 0;
@@ -62,9 +64,54 @@ static void MX_USART2_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+
+static void parse(const char *cmd)
+{
+	char* cmds = strtok(cmd, " ");
+
+	if (!strcasecmp(cmds,"LED1"))  {
+		cmds = strtok(NULL, " ");
+		if (!strcasecmp(cmds, "ON"))  {
+			HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 1);
+			printf("LED1 rozsvicena... \n");
+		}
+		else if (!strcasecmp(cmds, "OFF"))  {
+			HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 0);
+			printf("LED1 zhasnuta... \n");
+		}
+	}
+
+	else if (!strcasecmp(cmds, "LED2"))  {
+		cmds = strtok(NULL, " ");
+		if (!strcasecmp(cmds, "ON"))  {
+			HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
+			printf("LED2 rozsvicena... \n");
+		}
+		else if (!strcasecmp(cmds, "OFF"))  {
+			HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+			printf("LED2 zhasnuta... \n");
+		}
+	}
+
+	else if (!strcasecmp(cmds, "HELLO"))  {
+		printf("AHOJ SVETE!\n");
+	}
+	else if (!strcasecmp(cmds, "STATUS"))  {
+		uint8_t led1_stat = HAL_GPIO_ReadPin(LED1_GPIO_Port, LED1_Pin);
+		uint8_t led2_stat = HAL_GPIO_ReadPin(LED2_GPIO_Port, LED2_Pin);
+
+		printf("LED1 Status: %i \n", led1_stat);
+		printf("LED2 Status: %i \n", led2_stat);
+	}
+
+	else {
+		printf("prijato: %s \n", cmd);
+	}
+}
+
 static void uart_process_command(const char *cmd)
 {
-	printf("prijato: %s \n", cmd);
+	parse(cmd);
 }
 
 int _write(int file, char const *buf, int n)
@@ -241,9 +288,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED2_Pin|LD2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -251,12 +302,26 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : LED2_Pin */
+  GPIO_InitStruct.Pin = LED2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LED2_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LED1_Pin */
+  GPIO_InitStruct.Pin = LED1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LED1_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
