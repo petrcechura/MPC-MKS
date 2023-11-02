@@ -95,5 +95,9 @@ void sct_value(uint16_t value, uint8_t led, uint8_t fl_point)
 
 	reg |= reg_values[3][led];
 
+	if (fl_point)  {
+		reg |= 0b0000100000000000 << 0;
+	}
+
 	sct_led(reg);
 }
